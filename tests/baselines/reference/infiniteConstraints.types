@@ -52,7 +52,11 @@ declare function ensureNoDuplicates<
 const noError = ensureNoDuplicates({main: value("test"), alternate: value("test2")});
 >noError : void
 >ensureNoDuplicates({main: value("test"), alternate: value("test2")}) : void
+<<<<<<< b059135c51ee93f8fb44dd70a2ca67674ff7a877
 >ensureNoDuplicates : <T extends { [K in keyof T]: Extract<T[K], Record<"val", string>>["val"] extends Extract<T[Exclude<keyof T, K>], Record<"val", string>>["val"] ? never : any; }>(vals: T) => void
+=======
+>ensureNoDuplicates : <T extends { [K in keyof T]: never; }>(vals: T) => void
+>>>>>>> Always call getCandidateForOverloadFailure
 >{main: value("test"), alternate: value("test2")} : { main: Record<"val", "test">; alternate: Record<"val", "test2">; }
 >main : Record<"val", "test">
 >value("test") : Record<"val", "test">
@@ -66,7 +70,11 @@ const noError = ensureNoDuplicates({main: value("test"), alternate: value("test2
 const shouldBeNoError = ensureNoDuplicates({main: value("test")});
 >shouldBeNoError : void
 >ensureNoDuplicates({main: value("test")}) : void
+<<<<<<< b059135c51ee93f8fb44dd70a2ca67674ff7a877
 >ensureNoDuplicates : <T extends { [K in keyof T]: Extract<T[K], Record<"val", string>>["val"] extends Extract<T[Exclude<keyof T, K>], Record<"val", string>>["val"] ? never : any; }>(vals: T) => void
+=======
+>ensureNoDuplicates : <T extends { [K in keyof T]: never; }>(vals: T) => void
+>>>>>>> Always call getCandidateForOverloadFailure
 >{main: value("test")} : { main: Record<"val", "test">; }
 >main : Record<"val", "test">
 >value("test") : Record<"val", "test">
@@ -74,9 +82,15 @@ const shouldBeNoError = ensureNoDuplicates({main: value("test")});
 >"test" : "test"
 
 const shouldBeError = ensureNoDuplicates({main: value("dup"), alternate: value("dup")});
+<<<<<<< b059135c51ee93f8fb44dd70a2ca67674ff7a877
 >shouldBeError : any
 >ensureNoDuplicates({main: value("dup"), alternate: value("dup")}) : any
 >ensureNoDuplicates : <T extends { [K in keyof T]: Extract<T[K], Record<"val", string>>["val"] extends Extract<T[Exclude<keyof T, K>], Record<"val", string>>["val"] ? never : any; }>(vals: T) => void
+=======
+>shouldBeError : void
+>ensureNoDuplicates({main: value("dup"), alternate: value("dup")}) : void
+>ensureNoDuplicates : <T extends { [K in keyof T]: never; }>(vals: T) => void
+>>>>>>> Always call getCandidateForOverloadFailure
 >{main: value("dup"), alternate: value("dup")} : { main: Record<"val", "dup">; alternate: Record<"val", "dup">; }
 >main : Record<"val", "dup">
 >value("dup") : Record<"val", "dup">
