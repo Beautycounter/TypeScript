@@ -38,6 +38,9 @@ namespace ts.server {
          */
         private pendingReloadFromDisk: boolean;
 
+        mapper: DocumentPositionMapper | false | undefined = false;
+        sourceFileLike: SourceFileLike | undefined;
+
         constructor(private readonly host: ServerHost, private readonly fileName: NormalizedPath, initialVersion: ScriptInfoVersion | undefined, private readonly info: ScriptInfo) {
             this.version = initialVersion || { svc: 0, text: 0 };
         }
@@ -60,6 +63,8 @@ namespace ts.server {
             this.svc = undefined;
             this.text = newText;
             this.lineMap = undefined;
+            this.mapper = undefined;
+            this.sourceFileLike = undefined;
             this.version.text++;
         }
 
@@ -68,6 +73,8 @@ namespace ts.server {
             this.ownFileText = false;
             this.text = undefined;
             this.lineMap = undefined;
+            this.mapper = undefined;
+            this.sourceFileLike = undefined;
         }
 
         /**
@@ -124,8 +131,8 @@ namespace ts.server {
                 : ScriptSnapshot.fromString(this.getOrLoadText());
         }
 
-        public getLineInfo(line: number): AbsolutePositionAndLineText {
-            return this.switchToScriptVersionCache().getLineInfo(line);
+        public getAbsolutePositionAndLineText(line: number): AbsolutePositionAndLineText {
+            return this.switchToScriptVersionCache().getAbsolutePositionAndLineText(line);
         }
         /**
          *  @param line 0 based index
@@ -214,6 +221,17 @@ namespace ts.server {
             Debug.assert(!this.svc, "ScriptVersionCache should not be set");
             return this.lineMap || (this.lineMap = computeLineStarts(this.getOrLoadText()));
         }
+
+        getLineInfo(): LineInfo {
+            if (this.svc) {
+                return {
+                    getLineCount: () => this.svc!.getLineCount(),
+                    getLineText: line => this.svc!.getAbsolutePositionAndLineText(line + 1).lineText!
+                };
+            }
+            const lineMap = this.getLineMap();
+            return getLineInfo(this.text!, lineMap);
+        }
     }
 
     /*@internal*/
@@ -237,7 +255,7 @@ namespace ts.server {
 
         /* @internal */
         fileWatcher: FileWatcher | undefined;
-        private textStorage: TextStorage;
+        /* @internal */ textStorage: TextStorage;
 
         /*@internal*/
         readonly isDynamic: boolean;
@@ -247,10 +265,13 @@ namespace ts.server {
         private realpath: Path | undefined;
 
         /*@internal*/
-        cacheSourceFile: DocumentRegistrySourceFileCache;
+        cacheSourceFile: DocumentRegistrySourceFileCache | undefined;
 
         /*@internal*/
         mTime?: number;
+
+        /*@internal*/
+        mapInfo?: ScriptInfo;
 
         constructor(
             private readonly host: ServerHost,
@@ -484,8 +505,8 @@ namespace ts.server {
         }
 
         /*@internal*/
-        getLineInfo(line: number): AbsolutePositionAndLineText {
-            return this.textStorage.getLineInfo(line);
+        getAbsolutePositionAndLineText(line: number): AbsolutePositionAndLineText {
+            return this.textStorage.getAbsolutePositionAndLineText(line);
         }
 
         editContent(start: number, end: number, newText: string): void {
