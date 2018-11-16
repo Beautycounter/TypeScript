@@ -2198,6 +2198,7 @@ namespace ts.server {
             // Create the mapper
             declarationInfo.mapInfo = undefined;
 
+            // TODO: shkamat Lifetime of declarationInfo and mapInfo
             let readMapFile: ((fileName: string) => string | undefined) | undefined = fileName => {
                 const mapInfo = this.getOrCreateScriptInfoNotOpenedByClient(fileName, project.currentDirectory, project.directoryStructureHost);
                 if (!mapInfo) return undefined;
