@@ -38,9 +38,6 @@ namespace ts.server {
          */
         private pendingReloadFromDisk: boolean;
 
-        mapper: DocumentPositionMapper | false | undefined = false;
-        sourceFileLike: SourceFileLike | undefined;
-
         constructor(private readonly host: ServerHost, private readonly fileName: NormalizedPath, initialVersion: ScriptInfoVersion | undefined, private readonly info: ScriptInfo) {
             this.version = initialVersion || { svc: 0, text: 0 };
         }
@@ -63,8 +60,8 @@ namespace ts.server {
             this.svc = undefined;
             this.text = newText;
             this.lineMap = undefined;
-            this.mapper = undefined;
-            this.sourceFileLike = undefined;
+            this.info.mapper = undefined;
+            this.info.sourceFileLike = undefined;
             this.version.text++;
         }
 
@@ -73,8 +70,8 @@ namespace ts.server {
             this.ownFileText = false;
             this.text = undefined;
             this.lineMap = undefined;
-            this.mapper = undefined;
-            this.sourceFileLike = undefined;
+            this.info.mapper = undefined;
+            this.info.sourceFileLike = undefined;
         }
 
         /**
@@ -255,7 +252,7 @@ namespace ts.server {
 
         /* @internal */
         fileWatcher: FileWatcher | undefined;
-        /* @internal */ textStorage: TextStorage;
+        private textStorage: TextStorage;
 
         /*@internal*/
         readonly isDynamic: boolean;
@@ -272,6 +269,10 @@ namespace ts.server {
 
         /*@internal*/
         mapInfo?: ScriptInfo;
+        /*@internal*/
+        mapper: DocumentPositionMapper | false | undefined = false;
+        /*@internal*/
+        sourceFileLike: SourceFileLike | undefined;
 
         constructor(
             private readonly host: ServerHost,
@@ -545,6 +546,11 @@ namespace ts.server {
 
         public isJavaScript() {
             return this.scriptKind === ScriptKind.JS || this.scriptKind === ScriptKind.JSX;
+        }
+
+        /*@internal*/
+        getLineInfo(): LineInfo {
+            return this.textStorage.getLineInfo();
         }
     }
 }
