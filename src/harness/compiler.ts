@@ -9,28 +9,41 @@ namespace compiler {
     }
 
     export function readProject(host: fakes.ParseConfigHost, project: string | undefined, existingOptions?: ts.CompilerOptions): Project | undefined {
+        let jsMode = false;
+        let readResult = null;
+
         if (project) {
             project = vpath.isTsConfigFile(project) ? project : vpath.combine(project, "tsconfig.json");
-        }
-        else {
-            [project] = host.vfs.scanSync(".", "ancestors-or-self", {
-                accept: (path, stats) => stats.isFile() && host.vfs.stringComparer(vpath.basename(path), "tsconfig.json") === 0
-            });
+        } else {
+            // if there is no config file. look to see if there is a dynamic js file.
+            project = vpath.combine(project, "tsconfig.js");
+            const readResult = ts.readConfigFile(project, path => JSON.stringify(host.readFile(path)));
+            if (readResult.error) {
+                [project] = host.vfs.scanSync(".", "ancestors-or-self", {
+                    accept: (path, stats) => stats.isFile() && host.vfs.stringComparer(vpath.basename(path), "tsconfig.json") === 0
+                });
+            } else {
+                jsMode = true;
+            }
         }
 
         if (project) {
             // TODO(rbuckton): Do we need to resolve this? Resolving breaks projects tests.
             // project = vpath.resolve(host.vfs.currentDirectory, project);
 
-            // read the config file
-            const readResult = ts.readConfigFile(project, path => host.readFile(path));
-            if (readResult.error) {
-                return { file: project, errors: [readResult.error] };
+            if (!readResult) {
+                // read the config file
+                readResult = ts.readConfigFile(project, path => host.readFile(path));
+                if (readResult.error) {
+                    return { file: project, errors: [readResult.error] };
+                }
             }
 
             // parse the config file
             const config = ts.parseJsonConfigFileContent(readResult.config, host, vpath.dirname(project), existingOptions);
             return { file: project, errors: config.errors, config };
+        } else {
+
         }
     }
 
